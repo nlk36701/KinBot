@@ -902,6 +902,9 @@ class QuantumChemistry:
         elif self.queuing == 'slurm':
             job_template = job_template.format(name=job, ppn=self.ppn, queue_name=self.queue_name, errdir='perm',
                                                slurm_feature=self.slurm_feature, python_file=python_file, arguments='')
+        elif self.queuing == 'puget':
+            job_template = job_template.format(name=job, ppn=self.ppn, queue_name=self.queue_name,
+                                               errdir='perm', python_file=python_file, arguments='')
         else:
             logger.error('KinBot does not recognize queuing system {}.'.format(self.queuing))
             logger.error('Exiting')
@@ -910,8 +913,12 @@ class QuantumChemistry:
         qu_file = '{}{}'.format(job, constants.qext[self.queuing])
         with open(qu_file, 'w') as f_out_qu:
             f_out_qu.write(job_template)
-
         command = [constants.qsubmit[self.queuing], job + constants.qext[self.queuing]]
+        if self.queuing == 'puget':
+            puget_command = f'chmod 777 {job + constants.qext[self.queuing]}'
+            os.system(puget_command)
+            #overwrite the 'command' variable if using Puget
+            command = ["./" + job + constants.qext[self.queuing]]
         process = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = process.communicate()
         out = out.decode()
@@ -921,6 +928,9 @@ class QuantumChemistry:
                 pid = out.split('\n')[0].split('.')[0]
             elif self.queuing == 'slurm':
                 pid = out.split('\n')[0].split()[3]
+            elif self.queuing == 'puget':
+                print(f"This is the PID {process.pid}")
+                pid = process.pid
         except:
             msg = 'Something went wrong when submitting a job'
             msg += 'This is the standard output:\n' + out
@@ -1255,6 +1265,17 @@ class QuantumChemistry:
                         return 'running'
         elif self.queuing == 'local':
             pass
+        elif self.queuing == 'puget':
+            command = 'jobs'
+            process = subprocess.Popen(command,
+                                       shell= True,
+                                       stdout=subprocess.PIPE,
+                                       stdin=subprocess.PIPE,
+                                       stderr=subprocess.PIPE)
+            out, err = process.communicate()
+            print("I don't know if we've gotten this far")
+
+                                       
         else:
             logger.error('KinBot does not recognize queuing system {}.'.format(self.queuing))
             logger.error('Exiting')
@@ -1336,12 +1357,14 @@ class QuantumChemistry:
         while 1:
             if self.queuing == 'slurm':
                 command = ['squeue', '-h', '-u', '{}'.format(self.username)]
+                print(f"what is the command {command}")
             elif self.queuing == 'pbs':
                 command = ['qselect', '-u', '{}'.format(self.username)]
             elif self.queuing == 'local':
                 command = command = ['echo', '']
+            elif self.queuing == 'puget':
+                return 0 
             jobs = subprocess.check_output(command)
-
             if len(jobs.split(b'\n')) < self.queue_job_limit:
                 return 0
             time.sleep(1)

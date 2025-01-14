@@ -24,10 +24,10 @@
 "barrier_threshold" : 85.0,
 "rotation_restart": 0,
 
-"queuing": "<slurm or pbs>",
-"queue_name":"<name of your queue>",
+"queuing": "puget",
+"queue_name":"",
 "queue_job_limit": 100,
-"ppn": <num_processors_per_job>,
+"ppn": 1,
 
 "qc" : "gauss",
 "method" : "b3lyp",

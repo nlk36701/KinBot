@@ -113,9 +113,11 @@ for e in epsilon:
 # submission keywords
 qsubmit = {'pbs': 'qsub'}
 qsubmit['slurm'] = 'sbatch'
+qsubmit['puget'] = './'
 # extensions
 qext = {'pbs': '.pbs',
         'slurm': '.sbatch',
+        'puget': '.sh',
         }
 
 
